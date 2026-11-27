@@ -1,0 +1,65 @@
+name: catalog
+
+# Guards the public catalog. Runs on every pull request, on every push to main, once a day (a tag that was moved in a
+# plugin repository, or a repository that went private, fails here without any change to this repository), and by hand.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: catalog-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: catalog-check
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CLAUDE_CODE_VERSION: "2.1.332"
+    steps:
+      - name: Check out the catalog
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+
+      - name: Node.js for the Claude Code package
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: "22"
+
+      - name: Install Claude Code at a fixed version
+        run: npm install -g "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}"
+
+      - name: claude plugin validate --strict
+        env:
+          CLAUDE_CONFIG_DIR: ${{ runner.temp }}/claude-validate
+        run: claude plugin validate . --strict
+
+      - name: The previous catalog file
+        # On a pull request HEAD is the merge commit and its first parent is the tip of the base branch; on a push
+        # the first parent is the commit before. No fetch is needed for either.
+        run: |
+          set -euo pipefail
+          if git cat-file -e "HEAD^1:.claude-plugin/marketplace.json" 2>/dev/null; then
+            git show "HEAD^1:.claude-plugin/marketplace.json" > "$RUNNER_TEMP/base.json"
+          else
+            cp .claude-plugin/marketplace.json "$RUNNER_TEMP/base.json"
+          fi
+
+      - name: Pin rules (no credentials - a public catalog lists public repositories only)
+        run: python3 tools/catalog-check.py --audience public --base-file "$RUNNER_TEMP/base.json"
+
+      - name: Install drill in a throwaway configuration directory
+        env:
+          CLAUDE_CONFIG_DIR: ${{ runner.temp }}/claude-drill
+          CLAUDE_CODE_PLUGIN_PREFER_HTTPS: "1"
+        run: bash tools/install-drill.sh "$GITHUB_WORKSPACE"
