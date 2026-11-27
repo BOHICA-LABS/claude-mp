@@ -4,17 +4,17 @@
     "name": "Bohica Labs"
   },
   "metadata": {
-    "description": "Bohica Labs' Claude Code plugin marketplace — VSDD factory and more."
+    "description": "Bohica Labs' public Claude Code plugins. Every entry is pinned to a release tag and its commit."
   },
   "plugins": [
     {
       "name": "vsdd-factory",
-      "version": "1.0.0-rc.25",
       "source": {
         "source": "git-subdir",
         "url": "https://github.com/bohica-labs/vsdd-factory.git",
         "path": "plugins/vsdd-factory",
-        "ref": "main"
+        "ref": "v1.0.0-rc.25",
+        "sha": "51023185658350afaacaa931a175103d915d14ba"
       },
       "description": "Verified Spec-Driven Development (VSDD) dark factory for software — full SDLC pipeline: brownfield ingest, spec crystallization, story decomposition, TDD delivery, adversarial review, holdout evaluation, formal verification, and release gating.",
       "category": "sdlc",
@@ -25,28 +25,9 @@
         "factory",
         "sdlc"
       ]
-    },
-    {
-      "name": "secops-factory",
-      "version": "0.9.0",
-      "source": {
-        "source": "git-subdir",
-        "url": "https://github.com/bohica-labs/secops-factory.git",
-        "path": "plugins/secops-factory",
-        "ref": "main"
-      },
-      "description": "ICS/OT Security Operations factory — CVE enrichment, event investigation, MITRE ATT&CK mapping, and adversarial quality review with convergence-driven analysis.",
-      "category": "security",
-      "tags": [
-        "security",
-        "ics",
-        "ot",
-        "vulnerability",
-        "secops",
-        "soc",
-        "enrichment",
-        "mitre-attack"
-      ]
     }
-  ]
+  ],
+  "renames": {
+    "secops-factory": null
+  }
 }
